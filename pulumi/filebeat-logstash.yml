@@ -1,0 +1,39 @@
+#filebeat.inputs:
+    #- type: container
+    #  paths:
+    #    - /var/log/containers/*.log
+    #  processors:
+    #    - add_kubernetes_metadata:
+    #        host: ${NODE_NAME}
+    #        matchers:
+    #        - logs_path:
+    #            logs_path: "/var/log/containers/"
+
+    # To enable hints based autodiscover, remove `filebeat.inputs` configuration and uncomment this:
+    filebeat.autodiscover:
+      providers:
+        - type: kubernetes
+          node: ${NODE_NAME}
+          hints.enabled: true
+          hints.default_config:
+            type: container
+            paths:
+              - /var/log/containers/*${data.kubernetes.container.id}.log
+
+    processors:
+      - add_cloud_metadata:
+      - add_host_metadata:
+
+    cloud.id: ${ELASTIC_CLOUD_ID}
+    cloud.auth: ${ELASTIC_CLOUD_AUTH}
+
+    output.logstash:
+      hosts: ['logstash-service.monitoring:5044']
+
+    setup.dashboards.enabled: false
+    #setup.kibana.host: elasticsearch.kibana:30000
+
+    #output.elasticsearch:
+    #  hosts: ['${ELASTICSEARCH_HOST:elasticsearch.monitoring}:${ELASTICSEARCH_PORT:9200}']
+    #  username: ${ELASTICSEARCH_USERNAME}
+    #  password: ${ELASTICSEARCH_PASSWORD}
